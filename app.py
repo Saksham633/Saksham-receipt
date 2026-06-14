@@ -1,51 +1,59 @@
 import streamlit as st
-import pandas as pd
+import shelve
+import random
 from fpdf import FPDF
 from datetime import datetime
-import os
 
-# Data file setup
-DATA_FILE = "student_fees.csv"
+st.title("Saksham Receipt System")
 
-def save_data(data):
-    df = pd.DataFrame([data])
-    if not os.path.exists(DATA_FILE):
-        df.to_csv(DATA_FILE, index=False)
+# Permanent storage
+db = shelve.open('my_data', writeback=True)
+
+if 'data' not in st.session_state:
+    st.session_state.data = {"name": "", "zone": "", "ward": ""}
+
+if st.button("Generate New Random ID"):
+    st.session_state.random_id = str(random.randint(1000, 9999))
+
+u_id = st.text_input("Enter Unique ID", value=st.session_state.get('random_id', ''))
+
+if st.button("Search/Load Data"):
+    if u_id in db:
+        st.session_state.data = db[u_id]
+        st.success("Data Load Ho Gaya!")
     else:
-        df.to_csv(DATA_FILE, mode='a', header=False, index=False)
+        st.warning("ID nahi mili.")
 
-st.title("St. Xavier's School - Fee Management")
+name = st.text_input("Customer Name", value=st.session_state.data['name'])
+zone = st.text_input("Zone No", value=st.session_state.data['zone'])
+ward = st.text_input("Ward No", value=st.session_state.data['ward'])
+amt = st.text_input("Amount Paid")
 
-# Form inputs
-name = st.text_input("Student Name")
-adm_no = st.text_input("Admission Number")
-cls = st.text_input("Class & Section")
-amount = st.number_input("Amount Paid", min_value=0)
+if st.button("Save Data"):
+    db[u_id] = {"name": name, "zone": zone, "ward": ward}
+    st.success("Save Ho Gaya!")
 
-if st.button("Generate & Save Receipt"):
-    data = {
-        "Name": name, "Adm": adm_no, "Class": cls, 
-        "Amount": amount, "Date": datetime.now().strftime("%Y-%m-%d")
-    }
-    save_data(data)
-    st.success("Data Saved Successfully!")
-    
-    # PDF Logic
+# Fixed PDF Function
+def create_pdf():
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(200, 10, txt="ST. XAVIER'S SCHOOL", ln=True, align='C')
+    pdf.cell(200, 10, txt="SAKSHAM NAGAR NIGAM", ln=True, align='C')
     pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Student: {name}", ln=True)
-    pdf.cell(200, 10, txt=f"Adm No: {adm_no}", ln=True)
-    pdf.cell(200, 10, txt=f"Amount: {amount}", ln=True)
-    
-    pdf_output = pdf.output(dest='S').encode('latin-1')
-    st.download_button("Download Receipt", data=pdf_output, file_name="receipt.pdf")
+    pdf.cell(200, 10, txt=f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True, align='R')
+    pdf.ln(10)
+    pdf.cell(200, 10, txt=f"Unique ID: {u_id}", ln=True)
+    pdf.cell(200, 10, txt=f"Name: {name}", ln=True)
+    pdf.cell(200, 10, txt=f"Zone: {zone}", ln=True)
+    pdf.cell(200, 10, txt=f"Ward: {ward}", ln=True)
+    pdf.cell(200, 10, txt=f"Amount: {amt}", ln=True)
+    return pdf.output(dest='S').encode('latin-1')
 
-# Admin section to see all data
-if st.checkbox("View All Records"):
-    if os.path.exists(DATA_FILE):
-        df = pd.read_csv(DATA_FILE)
-        st.write(df)
-        
+if st.button("Generate Receipt"):
+    if name:
+        pdf_bytes = create_pdf()
+        st.download_button(label="Click Here to Download PDF", data=pdf_bytes, file_name="receipt.pdf", mime="application/pdf")
+    else:
+        st.error("Pehle Name bharein!")
+
+db.close()
