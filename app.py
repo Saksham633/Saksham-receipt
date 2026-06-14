@@ -20,9 +20,9 @@ u_id = st.text_input("Enter Unique ID", value=st.session_state.get('random_id', 
 if st.button("Search/Load Data"):
     if u_id in db:
         st.session_state.data = db[u_id]
-        st.success("Data Load Ho Gaya!")
+        st.success("DATA LOAD SUCCESSFULLY!")
     else:
-        st.warning("ID nahi mili.")
+        st.warning("Unique ID not found!")
 
 name = st.text_input("Customer Name", value=st.session_state.data['name'])
 zone = st.text_input("Zone No", value=st.session_state.data['zone'])
@@ -31,7 +31,7 @@ amt = st.text_input("Amount Paid")
 
 if st.button("Save Data"):
     db[u_id] = {"name": name, "zone": zone, "ward": ward}
-    st.success("Save Ho Gaya!")
+    st.success("DATA SAVE SUCCESSFULLY!")
 
 # Fixed PDF Function
 def create_pdf():
@@ -54,6 +54,6 @@ if st.button("Generate Receipt"):
         pdf_bytes = create_pdf()
         st.download_button(label="Click Here to Download PDF", data=pdf_bytes, file_name="receipt.pdf", mime="application/pdf")
     else:
-        st.error("Pehle Name bharein!")
+        st.error("PLEASE ENTER THE NAME!")
 
 db.close()
