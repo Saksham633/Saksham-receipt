@@ -43,14 +43,26 @@ if st.button("Save Data"):
 def generate_pdf(u_id, z, w, name, amt):
     pdf = FPDF()
     pdf.add_page()
+    # Header
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(200, 10, txt="Payment Receipt", ln=True, align='C')
+    pdf.cell(200, 10, txt="SAKSHAM NAGAR NIGAM", ln=True, align='C')
+    
+    # Date and Time
+    pdf.set_font("Arial", size=10)
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    pdf.cell(200, 10, txt=f"Date: {current_time}", ln=True, align='R')
+    
+    # Body (Har info alag line mein)
+    pdf.ln(10)
     pdf.set_font("Arial", size=12)
     pdf.cell(200, 10, txt=f"Unique ID: {u_id}", ln=True)
-    pdf.cell(200, 10, txt=f"Name: {name} | Zone: {z} | Ward: {w}", ln=True)
-    pdf.cell(200, 10, txt=f"Amount: {amt}", ln=True)
+    pdf.cell(200, 10, txt=f"Customer Name: {name}", ln=True)
+    pdf.cell(200, 10, txt=f"Zone No: {z}", ln=True)
+    pdf.cell(200, 10, txt=f"Ward No: {w}", ln=True)
+    pdf.cell(200, 10, txt=f"Amount Paid: {amt}", ln=True)
+    
     return pdf.output(dest='S').encode('latin-1')
-
+    
 if st.button("Generate Receipt"):
     if name:
         pdf_data = generate_pdf(u_id, zone, ward, name, amt)
