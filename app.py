@@ -1,5 +1,6 @@
 import streamlit as st
 import shelve
+import random
 from fpdf import FPDF
 
 st.title("Saksham Receipt System")
@@ -11,8 +12,12 @@ db = shelve.open('my_data', writeback=True)
 if 'data' not in st.session_state:
     st.session_state.data = {"name": "", "zone": "", "ward": ""}
 
-# Inputs
-u_id = st.text_input("Enter Unique ID")
+# Random ID Generation Button
+if st.button("Generate New Random ID"):
+    st.session_state.random_id = str(random.randint(1000, 9999))
+
+# Unique ID Input
+u_id = st.text_input("Enter Unique ID", value=st.session_state.get('random_id', ''))
 
 # Search/Load logic
 if st.button("Search/Load Data"):
