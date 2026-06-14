@@ -1,7 +1,6 @@
     import streamlit as st
 import pandas as pd
 import os
-
 # Data file setup
 DATA_FILE = "data.csv"
 
