@@ -1,46 +1,59 @@
 import streamlit as st
-import pandas as pd
-import os
-# Data file setup
-DATA_FILE = "data.csv"
+import shelve
+import random
+from fpdf import FPDF
+from datetime import datetime
 
-# Function to save data
-def save_data(data):
-    df = pd.DataFrame([data])
-    if not os.path.exists(DATA_FILE):
-        df.to_csv(DATA_FILE, index=False)
-    else:
-        df.to_csv(DATA_FILE, mode='a', header=False, index=False)
+st.title("Saksham Receipt System")
 
-st.title("Data Management System")
+# Permanent storage
+db = shelve.open('my_data', writeback=True)
 
-# Inputs
-unique_id = st.text_input("Enter Unique ID")
-name = st.text_input("Customer Name")
-zone = st.text_input("Zone No")
-ward = st.text_input("Ward No")
-amount = st.number_input("Amount Paid", min_value=0)
+if 'data' not in st.session_state:
+    st.session_state.data = {"name": "", "zone": "", "ward": ""}
 
-# Search Logic
+if st.button("Generate New Random ID"):
+    st.session_state.random_id = str(random.randint(1000, 9999))
+
+u_id = st.text_input("Enter Unique ID", value=st.session_state.get('random_id', ''))
+
 if st.button("Search/Load Data"):
-    if not unique_id:
-        st.error("Please enter the Unique ID!")
+    if u_id in db:
+        st.session_state.data = db[u_id]
+        st.success("Data Load Ho Gaya!")
     else:
-        # Simple simulation of loading data
-        st.success("Data loaded successfully!")
+        st.warning("ID nahi mili.")
 
-# Save Logic
+name = st.text_input("Customer Name", value=st.session_state.data['name'])
+zone = st.text_input("Zone No", value=st.session_state.data['zone'])
+ward = st.text_input("Ward No", value=st.session_state.data['ward'])
+amt = st.text_input("Amount Paid")
+
 if st.button("Save Data"):
-    if not name:
-        st.error("Please enter the Name!")
-    else:
-        data = {
-            "ID": unique_id, "Name": name, "Zone": zone, 
-            "Ward": ward, "Amount": amount
-        }
-        save_data(data)
-        st.success("Data saved successfully!")
+    db[u_id] = {"name": name, "zone": zone, "ward": ward}
+    st.success("Save Ho Gaya!")
+
+# Fixed PDF Function
+def create_pdf():
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(200, 10, txt="SAKSHAM NAGAR NIGAM", ln=True, align='C')
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt=f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True, align='R')
+    pdf.ln(10)
+    pdf.cell(200, 10, txt=f"Unique ID: {u_id}", ln=True)
+    pdf.cell(200, 10, txt=f"Name: {name}", ln=True)
+    pdf.cell(200, 10, txt=f"Zone: {zone}", ln=True)
+    pdf.cell(200, 10, txt=f"Ward: {ward}", ln=True)
+    pdf.cell(200, 10, txt=f"Amount: {amt}", ln=True)
+    return pdf.output(dest='S').encode('latin-1')
 
 if st.button("Generate Receipt"):
-    st.info("Receipt generation feature is ready!")
-    
+    if name:
+        pdf_bytes = create_pdf()
+        st.download_button(label="Click Here to Download PDF", data=pdf_bytes, file_name="receipt.pdf", mime="application/pdf")
+    else:
+        st.error("Pehle Name bharein!")
+
+db.close()
