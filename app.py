@@ -31,14 +31,14 @@ amt = st.text_input("Amount Paid")
 
 if st.button("Save Data"):
     db[u_id] = {"name": name, "zone": zone, "ward": ward}
-    st.success("Save Ho Gaya!")
+    st.success("Save Ho Gaya!😃")
 
 # Fixed PDF Function
 def create_pdf():
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(200, 10, txt="SAKSHAM NAGAR NIGAM", ln=True, align='C')
+    pdf.cell(200, 10, txt="SAKSHAM RECEIPT GENERATER", ln=True, align='C')
     pdf.set_font("Arial", size=12)
     pdf.cell(200, 10, txt=f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True, align='R')
     pdf.ln(10)
@@ -49,11 +49,11 @@ def create_pdf():
     pdf.cell(200, 10, txt=f"Amount: {amt}", ln=True)
     return pdf.output(dest='S').encode('latin-1')
 
-if st.button("Generate Receipt"):
+if st.button("Generate Receipt😃"):
     if name:
         pdf_bytes = create_pdf()
-        st.download_button(label="Click Here to Download PDF", data=pdf_bytes, file_name="receipt.pdf", mime="application/pdf")
+        st.download_button(label="Click Here to Download PDF✨", data=pdf_bytes, file_name="receipt.pdf", mime="application/pdf")
     else:
-        st.error("Pehle Name bharein!")
+        st.error("Pehle Name bharein!☹️")
 
 db.close()
